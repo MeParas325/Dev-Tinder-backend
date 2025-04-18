@@ -17,7 +17,7 @@ userRouter.get("/user/requests/received", userAuth, async (req, res) => {
         const connectionRequests = await ConnectionRequest.find({
             toUserId: loggedInUser._id,
             status: "interested"
-        }).populate("fromUserId", ["firstName", "lastName"])
+        }).populate("fromUserId", ["firstName", "lastName", "photoUrl", "about", "age", "gender"])
 
         // send back the response
         res.json({
@@ -51,9 +51,9 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
         // filter the connections to get only the connections with the logged in user
         let connectionsWithUser = connections.map((connection) => {
             if(connection.fromUserId._id.toString() === loggedInUser._id.toString()) {
-                return row.toUserId
+                return connection.toUserId
             } else {
-                return row.fromUserId
+                return connection.fromUserId
             }
         })
 

@@ -5,6 +5,13 @@ const userAuth = async (req, res, next) => {
 
   try {
     const { token } = req.cookies;
+
+    // if token is not valid
+    if(!token) {
+      return res.status(401).json({
+        msg: "Unauthorized user! Please login",
+      })
+    }
     
     const decodedObj = jwt.verify(token, "DEV@TANUJA");
     const { _id } = decodedObj;
@@ -15,6 +22,7 @@ const userAuth = async (req, res, next) => {
     req.user = user
     next();
   } catch (error) {
+    
     res.status(400).send(error.message);
   }
 };

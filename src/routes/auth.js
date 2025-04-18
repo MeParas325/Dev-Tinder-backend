@@ -12,8 +12,9 @@ authRouter.post("/signup", async (req, res) => {
     validateSignUpData(req);
 
     // get the user details
-    const { firstName, lastName, emailId, password, photoUrl } = req.body
+    let { firstName, lastName, emailId, password, photoUrl } = req.body
 
+    
     // enccrypt the password
     const passswordHash = await bcrypt.hash(password, 10)
 
@@ -26,10 +27,20 @@ authRouter.post("/signup", async (req, res) => {
       photoUrl,
     })
 
+    if(!photoUrl) photoUrl = ""
     // create user in the database
-    await user.save()
+    const savedUser = await user.save()
+    console.log("PhtooUrl is; ", photoUrl);
+
+    const token = await savedUser.getJWT()
+    res.cookie("token", token, {
+      expires: new Date(Date.now() + 8 * 36000000)
+    })
     // send back the response
-    res.status(200).send("User created successfully")
+    res.status(200).json({
+      message: "User Added: successfully",
+      data: savedUser,
+    })
   } catch (error) {
     // send the error as response
     res.status(400).send(error.message)
@@ -51,18 +62,25 @@ authRouter.post("/login", async (req, res) => {
     if (!user) throw new Error("Invalid Crendentails")
     
     // validate the password
-    const isPasswordValid = user.validatePassword(password)
+    const isPasswordValid = await user.validatePassword(password)
 
     // throw error if password is not valid
     if (!isPasswordValid) throw new Error("Invalid Crendentails")
-
     // get the jwt token
     const token = user.getJWT()
 
+    const userObj = user.toObject()
+    delete userObj.password
+
     // set token in res cookies
-    res.cookie("token", token)
+    res.cookie("token", token, {
+      expires: new Date(Date.now() + 8 * 36000000)
+    })
     // send back the response
-    res.status(200).send("Login successfully")
+    res.status(200).json({
+      message: "Login Successfully",
+      data: userObj
+    })
   } catch (error) {
     res.status(400).send(error.message)
   }
